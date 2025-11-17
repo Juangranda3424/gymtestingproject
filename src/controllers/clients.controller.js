@@ -48,8 +48,8 @@ async function createClient(req, res){
         res.status(201).json(result.rows[0]);
 
     } catch {
-
-        res.status(500).json({ message: 'Error al crear el cliente' });
+        
+        res.status(500).json({ message: 'Error al actualizar el cliente' });
         
     }
 
@@ -63,16 +63,16 @@ async function updateClient(req, res){
 
     try {
         
-        const {name, lastname, email, cell } = req.body;
+        const {name, lastname, cell } = req.body;
         const { id } = req.params;
 
-        if (!name && !email && !lastname && !cell) {
+        if (!name &&!lastname && !cell) {
             return res.status(400).json({ message: 'Actualización de datos del cliente invalida' });
         }
 
         const result = await pool.query(
-        'UPDATE clientes SET nombre=$1, apellido=$2, email=$3, telefono=$4 WHERE id_cliente=$5 RETURNING *',
-        [name, lastname, email, cell, id ]
+        'UPDATE clientes SET nombre=$1, apellido=$2, telefono=$3 WHERE id_cliente=$4 RETURNING *',
+        [name, lastname,cell, id ]
         );
         
         if (result.rows.length === 0) {
@@ -82,8 +82,7 @@ async function updateClient(req, res){
         res.status(200).json(result.rows[0]);
 
     } catch {
-
-        res.status(500).json({ message: 'Error al actualizar el cliente' });
+        res.status(500).json({ message: "Error al actualizar" });
         
     }
 
