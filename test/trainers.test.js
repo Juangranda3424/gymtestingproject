@@ -10,7 +10,7 @@ let createdTrainerId;
 describe('Trainers API - Normal scenarios', () => {
 
   // ---------------------------
-  // 1️⃣ GET /api/trainers - todos los entrenadores
+  // GET /api/trainers - todos los entrenadores
   // ---------------------------
   test('GET /api/trainers should return all trainers', async () => {
     // Probamos que se devuelvan todos los entrenadores
@@ -20,7 +20,7 @@ describe('Trainers API - Normal scenarios', () => {
   });
 
   // ---------------------------
-  // 2️⃣ POST /api/trainers - crear entrenador
+  // POST /api/trainers - crear entrenador
   // ---------------------------
   test('POST /api/trainers should create a trainer', async () => {
     const uniqueEmail = `ana_${Date.now()}@test.com`; // email único cada vez que corre el test
@@ -51,7 +51,7 @@ describe('Trainers API - Normal scenarios', () => {
   });
 
   // ---------------------------
-  // 3️⃣ GET /api/trainers/:id - entrenador específico
+  // GET /api/trainers/:id - entrenador específico
   // ---------------------------
   test('GET /api/trainers/:id should return a specific trainer', async () => {
     const res = await request(app).get(`/api/trainers/${createdTrainerId}`);
@@ -66,7 +66,7 @@ describe('Trainers API - Normal scenarios', () => {
   });
 
   // ---------------------------
-  // 4️⃣ PUT /api/trainers/:id - actualizar entrenador
+  // PUT /api/trainers/:id - actualizar entrenador
   // ---------------------------
   test('PUT /api/trainers/:id should update a trainer', async () => {
     const uniqueEmail = `ana_${Date.now()}@test.com`;
@@ -102,7 +102,7 @@ describe('Trainers API - Normal scenarios', () => {
   });
 
   // ---------------------------
-  // 5️⃣ DELETE /api/trainers/:id - eliminar entrenador
+  // DELETE /api/trainers/:id - eliminar entrenador
   // ---------------------------
   test('DELETE /api/trainers/:id should delete a trainer', async () => {
     const res = await request(app).delete(`/api/trainers/${createdTrainerId}`);
