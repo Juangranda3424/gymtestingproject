@@ -1,5 +1,6 @@
 const express = require('express');
 const clientRoutes = require('./routes/clients.routes');
+const trainerRoutes = require('./routes/trainers.routes');
 
 const app = express();
 
@@ -8,6 +9,8 @@ app.use(express.json());
 
 // Ruta base para los clientes
 app.use('/api/clients', clientRoutes);
+// Ruta base para los entrenadores
+app.use('/api/trainers', trainerRoutes);
 
 // Manejador de rutas no encontradas (404)
 app.use((req, res) => {
