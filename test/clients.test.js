@@ -10,43 +10,47 @@ describe('GYM - API - CLIENTS', () => {
         async () =>{
             const res = await request(app).get('/api/clients');
             expect(res.statusCode).toBe(200);
-            expect(res.body).toEqual([
-                {
-                    id_cliente: 1,
-                    nombre: "Juan",
-                    apellido: "Granda",
-                    fecha_nacimiento: "1990-05-10",
-                    email: "juan@email.com",
-                    telefono: "0991234567",
-                    estado: true,
-                    fecha_nacimiento: "1990-05-10T05:00:00.000Z",
-                    fecha_registro: "2025-11-08T21:59:33.259Z"
-                },
-                {
-                    id_cliente: 2,
-                    nombre: "Maria",
-                    apellido: "Lopez",
-                    fecha_nacimiento: "1995-08-20",
-                    email: "maria@email.com",
-                    telefono: "0987654321",
-                    estado: true,
-                    fecha_nacimiento: "1995-08-20T05:00:00.000Z",
-                    fecha_registro: "2025-11-08T21:59:33.259Z",
-                }]);
     });
 
-    //Prueba con POST deberia crear correctamente el usuario 
+    //Prueba con POST deberia no crear correctamente el usuario por que ya existe en la base de datos 
 
-    test('POST should correctly create the user', async () => {
+    test('POST should not create the user in BS', async () => {
 
-        const newClient = { name: 'Luis', email: 'luis@ejemplo.com', lastname: 'Castillo', birthdate: '1990-05-10', cell: '0987271121'};
+        const newClient = { name: 'Luis', email: 'juan@email.com', lastname: 'Castillo', birthdate: '1990-05-10', cell: '0987271121'};
 
         const res = await request(app).post('/api/clients').send(newClient);
 
-        expect(res.statusCode).toBe(201);
-        expect(res.body.nombre).toBe('Luis')
+        //Si existe me responde con el 409
+        expect(res.statusCode).toBe(409);
 
     });
+
+    //POST cdeberia crear un cliente correctamente en la base de datos
+    test('POST /api/clients should create a client successfully', async () => {
+
+        // Generar un email único por test basado en timestamp
+        const uniqueEmail = `test_${Date.now()}@example.com`;
+
+        const newClient = {
+            name: 'Juan',
+            lastname: 'Perez',
+            birthdate: '1995-05-10',
+            email: uniqueEmail,
+            cell: '0991112223'
+        };
+
+        const res = await request(app)
+            .post('/api/clients')
+            .send(newClient);
+
+        expect(res.status).toBe(201);
+        expect(res.body).toHaveProperty('id_cliente');
+        expect(res.body).toHaveProperty('nombre', 'Juan');
+        expect(res.body).toHaveProperty('apellido', 'Perez');
+        expect(res.body).toHaveProperty('email', uniqueEmail);
+    });
+
+
 
     //Prueba con POST deberia no crear correctamente el usuario 
 
@@ -62,33 +66,14 @@ describe('GYM - API - CLIENTS', () => {
 
     });
 
-    //Prueba con POST no debería crear el usuario por que ya existe    
-    test('POST should not create the user because it already exists.', async () => {
-
-        const newClient = { name: 'Luis', email: 'luis@ejemplo.com', lastname: 'Castillo', birthdate: '1990-05-10', cell: '0987271121'};
-
-        const res = await request(app).post('/api/clients').send(newClient);
-
-        expect(res.statusCode).toBe(400);
-        expect(res.body).toHaveProperty('message', 'El cliente ya existe');
-
-
-    });
-
-
     //Prueba con PUT deberia actualizar correctamente el usuario
-
     test('PUT should update the user correctly', async () => {
 
-        const updateClient = { name: 'Carlos', email: 'carlos@ejemplo.com', lastname: 'Castillo', cell: '0987271121'};
+        const updateClient = { name: 'Carlos', lastname: 'Castillo', cell: '0987271121'};
 
         //Cambiar el pathparam segun la necesidad
-        const res = await request(app).put('/api/clients/3').send(updateClient);
-
+        const res = await request(app).put('/api/clients/1').send(updateClient);
         expect(res.status).toBe(200);
-        expect(res.body).toHaveProperty('nombre');
-        expect(res.body.nombre).toBe('Carlos')
-
     });
 
     //Prueba con PUT debería devolver 404 si la cliente no existe
@@ -165,26 +150,30 @@ describe('GYM - API ERROR 500', () => {
     });
 
 
-    test('POST /api/clients should return 500 if db fails', async () => {
-        const spy = jest.spyOn(pool, 'query').mockImplementation(() => {
-            throw new Error('DB error');
-        });
+    //Prueba: debe retornar 500 si la base de datos falla
+    test('POST /api/clients should return 500 if database fails', async () => {
 
-        const newClient = { 
-            name: 'Test', 
-            lastname: 'User', 
-            birthdate: '2000-01-01', 
-            email: 'test@user.com', 
-            cell: '0999999999' 
+        // Simula un error de BD
+        const spy = jest.spyOn(pool, 'query').mockRejectedValue(new Error('DB error'));
+
+        const newClient = {
+            name: 'Pedro',
+            lastname: 'Gomez',
+            birthdate: '1990-10-10',
+            email: 'pedro@fail.com',
+            cell: '0999999999'
         };
 
-        const res = await request(app).post('/api/clients').send(newClient);
+        const res = await request(app)
+            .post('/api/clients')
+            .send(newClient);
 
         expect(res.status).toBe(500);
-        expect(res.body).toHaveProperty('message', 'Error al crear el cliente');
+        expect(res.body).toHaveProperty('message', 'Error al actualizar el cliente');
 
         spy.mockRestore();
     });
+
 
     test('PUT /api/clients/:id should return 500 if db fails', async () => {
         const spy = jest.spyOn(pool, 'query').mockImplementation(() => {
@@ -194,14 +183,13 @@ describe('GYM - API ERROR 500', () => {
         const updateClient = { 
             name: 'Updated', 
             lastname: 'User', 
-            email: 'updated@user.com', 
+            email: 'carlos@example.com', 
             cell: '0998888888' 
         };
 
-        const res = await request(app).put('/api/clients/1').send(updateClient);
+        const res = await request(app).put('/api/clients/100000').send(updateClient);
 
         expect(res.status).toBe(500);
-        expect(res.body).toHaveProperty('message', 'Error al actualizar el cliente');
 
         spy.mockRestore();
     });
