@@ -96,7 +96,9 @@ describe('GYM - API - MEMBERSHIPS', () => {
 
 
 /* --------------------------
+
    TESTS DE ERROR 500
+   
 ---------------------------- */
 
 describe('GYM - API ERROR 500 - MEMBERSHIPS', () => {
