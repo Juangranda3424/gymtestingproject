@@ -97,7 +97,7 @@ describe('GYM - API - MEMBERSHIPS', () => {
 
 /* --------------------------
 
-   TESTS DE ERROR 500
+   TESTS DE ERROR 500 - servidor 
    
 ---------------------------- */
 
@@ -114,6 +114,7 @@ describe('GYM - API ERROR 500 - MEMBERSHIPS', () => {
         spy.mockRestore();
     });
 
+    //  POST /api/memberships - error 500
     test('POST /api/memberships should return 500 if db fails', async () => {
         const spy = jest.spyOn(pool, 'query').mockRejectedValue(new Error('DB error'));
 
@@ -129,6 +130,7 @@ describe('GYM - API ERROR 500 - MEMBERSHIPS', () => {
         spy.mockRestore();
     });
 
+    // PUT /api/memberships/:id - error 500
     test('PUT /api/memberships/:id should return 500 if db fails', async () => {
         const spy = jest.spyOn(pool, 'query').mockImplementation(() => {
             throw new Error('DB error');
@@ -146,7 +148,7 @@ describe('GYM - API ERROR 500 - MEMBERSHIPS', () => {
 
         spy.mockRestore();
     });
-
+    // DELETE /api/memberships/:id - error 500
     test('DELETE /api/memberships/:id should return 500 if db fails', async () => {
         const spy = jest.spyOn(pool, 'query').mockImplementation(() => {
             throw new Error('DB error');

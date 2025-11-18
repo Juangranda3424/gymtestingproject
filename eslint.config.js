@@ -5,7 +5,7 @@ module.exports = [
     {
         files: ['src/**/*.js'],     // Aplica a todos los archivos JS en src/
         languageOptions: {
-            ecmaVersion: 2021,
+            ecmaVersion: 2021,      // Soporta características modernas de JS
             sourceType: 'commonjs', // usa require y module.exports
             globals: {
                 process: 'readonly',   // permite usar process

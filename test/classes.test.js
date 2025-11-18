@@ -41,7 +41,7 @@ beforeAll(async () => {
 });
 
 // -------------------
-// GET Tests
+// GET Tests  para captura y obtencion
 // -------------------
 describe('GET /api/classes endpoints', () => {
   // Verifica que la ruta GET /api/classes devuelva todas las clases
@@ -72,7 +72,7 @@ describe('GET /api/classes endpoints', () => {
 });
 
 // -------------------
-// POST Tests
+// POST Tests para devolucion 
 // -------------------
 describe('POST /api/classes endpoints', () => {
   // Verifica que POST /api/classes cree una nueva clase correctamente
@@ -127,7 +127,7 @@ describe('POST /api/classes endpoints', () => {
 });
 
 // -------------------
-// PUT Tests
+// PUT Tests  para actualizacion
 // -------------------
 describe('PUT /api/classes/:id endpoints', () => {
   // Verifica que se pueda actualizar correctamente una clase existente
@@ -219,7 +219,7 @@ describe('PUT /api/classes/:id endpoints', () => {
 });
 
 // -------------------
-// DELETE Tests
+// DELETE Tests  para eliminar
 // -------------------
 describe('DELETE /api/classes/:id endpoints', () => {
 
@@ -244,7 +244,7 @@ describe('DELETE /api/classes/:id endpoints', () => {
 });
 
 // -------------------
-// Unknown route
+// Unknown route  rutas conocidas
 // -------------------
 describe('Unknown route', () => {
 
@@ -256,7 +256,7 @@ describe('Unknown route', () => {
 });
 
 // -------------------
-// 500 errors
+// 500 errors - Condiciones inesperadas en el Servidor
 // -------------------
 describe('Simulated 500 errors', () => {
 

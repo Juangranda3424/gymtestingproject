@@ -1,4 +1,5 @@
 const express = require('express');
+// Controladores de membresías
 const {
   getAllMemberships,
   createMembership,
