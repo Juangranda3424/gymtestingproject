@@ -134,9 +134,9 @@ const deleteTrainer = async (req, res) => {
 
 // Exportar todas las funciones del controlador
 module.exports = {
-  getAllTrainers,
-  getTrainerById,
-  createTrainer,
-  updateTrainer,
-  deleteTrainer
+  getAllTrainers,   //
+  getTrainerById,   //
+  createTrainer,    //
+  updateTrainer,    //
+  deleteTrainer     //
 };

@@ -1,5 +1,6 @@
 const js = require('@eslint/js');
 
+// Configuración de ESLint para el proyecto Gym Testing Project
 module.exports = [
     {
         files: ['src/**/*.js'],     // Aplica a todos los archivos JS en src/
@@ -11,6 +12,8 @@ module.exports = [
                 console: 'readonly'    // permite usar console 
             }
         },
+
+        // Reglas de estilo y mejores prácticas
         rules: {
             ...js.configs.recommended.rules,
             semi: ['error', 'always'], // exige punto y coma

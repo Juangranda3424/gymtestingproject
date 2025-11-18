@@ -47,7 +47,7 @@ async function createClient(req, res) {
 }
 
 /*
-    Actualiza un cliente en la base de datos
+    Actualiza un cliente en la base de datos 
 */
 async function updateClient(req, res) {
   try {
@@ -59,7 +59,7 @@ async function updateClient(req, res) {
         .status(400)
         .json({ message: 'Actualización de datos del cliente inválida' });
     }
-
+      // Construyo la consulta dinámicamente
     const result = await pool.query(
       'UPDATE clientes SET nombre=$1, apellido=$2, telefono=$3 WHERE id_cliente=$4 RETURNING *',
       [name, lastname, cell, id]
@@ -68,7 +68,7 @@ async function updateClient(req, res) {
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Cliente no encontrado' });
     }
-
+      // Devuelvo el cliente actualizado
     res.status(200).json(result.rows[0]);
   } catch {
     res.status(500).json({ message: 'Error al actualizar' });
@@ -87,6 +87,7 @@ async function deleteClient(req, res) {
       [id]
     );
 
+    // Verifico si el cliente existe
     if (result.rows.length === 0) {
       return res.status(404).json({
         message: 'Cliente no encontrado en la base de datos'
@@ -97,7 +98,7 @@ async function deleteClient(req, res) {
       'UPDATE clientes SET estado=$1 WHERE id_cliente=$2 RETURNING *',
       [false, id]
     );
-
+    // Devuelvo el cliente eliminado
     res.status(200).json(resultDelete.rows[0]);
   } catch {
     res.status(500).json({ message: 'Error al eliminar el cliente' });

@@ -59,7 +59,7 @@ async function updateMembership(req, res) {
         message: 'Actualización de datos de la membresía inválida'
       });
     }
-
+    // Actualizo la membresía
     const result = await pool.query(
       `UPDATE membresias 
        SET tipo=$1, precio=$2, duracion_meses=$3
@@ -99,7 +99,7 @@ async function deleteMembership(req, res) {
       'DELETE FROM membresias WHERE id_membresia=$1 RETURNING *',
       [id]
     );
-
+    // Devuelvo la membresía eliminada
     res.status(200).json(resultDelete.rows[0]);
   } catch {
     res.status(500).json({ message: 'Error al eliminar la membresía' });

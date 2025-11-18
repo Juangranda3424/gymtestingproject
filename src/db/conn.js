@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 const config = require('../config');
 
+// Configuración del pool de conexiones
 const pool = new Pool({
   user: config.db.user,
   host: config.db.host,
@@ -11,6 +12,7 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
 });
 
+// Evento para manejar errores del pool
 pool.on('connect', () => {
   console.log('Conexión a la base de datos exitosa!');
 });

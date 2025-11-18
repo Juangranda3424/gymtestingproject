@@ -1,5 +1,6 @@
 require('dotenv').config({ path: '.env.dev' });
 
+// Configuración de la base de datos
 module.exports = {
   db: {
     host: process.env.DB_HOST,    // 'localhost'

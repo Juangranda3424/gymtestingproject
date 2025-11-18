@@ -42,7 +42,7 @@ describe('GYM - API - CLIENTS', () => {
         const res = await request(app)
             .post('/api/clients')
             .send(newClient);
-
+        // Asserts
         expect(res.status).toBe(201);
         expect(res.body).toHaveProperty('id_cliente');
         expect(res.body).toHaveProperty('nombre', 'Juan');
