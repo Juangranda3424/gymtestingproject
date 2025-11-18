@@ -93,7 +93,7 @@ describe('GYM - API - CLIENTS', () => {
         const res = await request(app).put('/api/clients/1').send(updateClient);
 
         expect(res.status).toBe(400);
-        expect(res.body).toHaveProperty('message', 'Actualización de datos del cliente invalida');
+        expect(res.body).toHaveProperty('message', 'Actualización de datos del cliente inválida');
     });
 
     //Prueba con DELETE deberia eliminar correctamente el usuario
@@ -169,7 +169,7 @@ describe('GYM - API ERROR 500', () => {
             .send(newClient);
 
         expect(res.status).toBe(500);
-        expect(res.body).toHaveProperty('message', 'Error al actualizar el cliente');
+        expect(res.body).toHaveProperty('message', 'Error al crear el cliente');
 
         spy.mockRestore();
     });
