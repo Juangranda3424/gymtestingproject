@@ -148,7 +148,7 @@ describe('GYM - API ERROR 500 - MEMBERSHIPS', () => {
 
         spy.mockRestore();
     });
-    // DELETE /api/memberships/:id - error 500
+    // DELETE /api/memberships/:id - error 500 server
     test('DELETE /api/memberships/:id should return 500 if db fails', async () => {
         const spy = jest.spyOn(pool, 'query').mockImplementation(() => {
             throw new Error('DB error');

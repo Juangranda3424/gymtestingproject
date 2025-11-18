@@ -48,14 +48,14 @@ describe('GET /api/classes endpoints', () => {
   test('GET /api/classes should return all classes', async () => {
     const res = await request(app).get('/api/classes');
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body)).toBe(true);   // Verifica que sea un array
   });
 
   // Verifica que GET /api/classes/:id devuelva la clase correcta por su id
   test('GET /api/classes/:id should return class by id', async () => {
     const res = await request(app).get(`/api/classes/${baseClassId}`);
     expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty('id_clase', baseClassId);
+    expect(res.body).toHaveProperty('id_clase', baseClassId);   // toHaveProperty verifica que la propiedad exista y tenga el valor esperado
   });
 
   // Verifica que GET /api/classes/:id con id inválido retorne 400
@@ -192,7 +192,7 @@ describe('PUT /api/classes/:id endpoints', () => {
   test('PUT /api/classes/:id set id_entrenador null', async () => {
     const res = await request(app).put(`/api/classes/${putClassId}`).send({ id_entrenador: null, nombre_clase: 'Clase sin entrenador' });
     expect(res.statusCode).toBe(200);
-    expect(res.body.id_entrenador).toBeNull();
+    expect(res.body.id_entrenador).toBeNull();      //tobeNull verifica que sea null
   });
 
   // Verifica que se pueda actualizar solo la descripción de la clase
@@ -265,7 +265,7 @@ describe('Simulated 500 errors', () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).get('/api/classes');
     expect(res.statusCode).toBe(500);
-    expect(res.body.error).toMatch(/Error obteniendo clases/);
+    expect(res.body.error).toMatch(/Error obteniendo clases/);  //toMatch en vez de toBe para mayor flexibilidad
     spy.mockRestore();
   });
 
@@ -283,7 +283,7 @@ describe('Simulated 500 errors', () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).post('/api/classes').send({ nombre_clase: 'Test', horario: '10:00', dia_semana: 'Lunes' });
     expect(res.statusCode).toBe(500);
-    expect(res.body.error).toMatch(/Error creando clase/);
+    expect(res.body.error).toMatch(/Error creando clase/);  
     spy.mockRestore();
   });
 
