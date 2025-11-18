@@ -1,62 +1,59 @@
-const pool = require('../db/conn'); // Importar el pool de conexiones a PostgreSQL
+const pool = require('../db/conn'); 
 
 /**
- * Obtener todos los entrenadores
  * GET /api/trainers
- */
+ * Obtener todos los entrenadores
+*/
 const getAllTrainers = async (req, res) => {
   try {
-    // Ejecuta la consulta para obtener todos los entrenadores
+    // Todos los entrenadores
     const result = await pool.query('SELECT * FROM entrenadores');
-    // Retorna los resultados como JSON
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
-    // Si ocurre un error en la consulta, retorna un 500
     res.status(500).json({ error: 'Error obteniendo entrenadores' });
   }
 };
 
 /**
- * Obtener un entrenador por ID
  * GET /api/trainers/:id
- */
+ * Obtener un entrenador por ID
+*/
 const getTrainerById = async (req, res) => {
-  const { id } = req.params; // Obtener el ID desde los parámetros de la ruta
+  const { id } = req.params; 
   try {
+    // Consulta Entrenador por ID 
     const result = await pool.query(
       'SELECT * FROM entrenadores WHERE id_entrenador=$1',
-      [id] // Usar parámetros para evitar SQL Injection
+      [id]
     );
 
-    // Si no se encuentra el entrenador, retornar 404
+    // Entrenador no encontrado
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Entrenador no encontrado' });
     }
 
-    // Retorna el entrenador encontrado
+    // Entrenador encontrado
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Error obteniendo entrenador' });
   }
 };
 
 /**
- * Crear un nuevo entrenador
  * POST /api/trainers
- */
+ * Crear un nuevo entrenador
+*/
 const createTrainer = async (req, res) => {
   // Extraer datos del cuerpo de la solicitud
   const { nombre, apellido, email, telefono, especialidad, fecha_contratacion } = req.body;
 
-  // Validar que los campos obligatorios estén presentes
+  // Validacion de campos obligatorios
   if (!nombre || !apellido || !email) {
     return res.status(400).json({ message: 'Datos del entrenador inválidos' });
   }
 
   try {
-    // Ejecuta la consulta para insertar un nuevo entrenador
+    // Insertar un nuevo entrenador
     const result = await pool.query(
       `INSERT INTO entrenadores 
       (nombre, apellido, email, telefono, especialidad, fecha_contratacion) 
@@ -64,10 +61,9 @@ const createTrainer = async (req, res) => {
       [nombre, apellido, email, telefono, especialidad, fecha_contratacion]
     );
 
-    // Retorna el entrenador creado con código 201 (Created)
+    // Entrenador creado (201)
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Error creando entrenador' });
   }
 };
@@ -77,16 +73,18 @@ const createTrainer = async (req, res) => {
  * PUT /api/trainers/:id
  */
 const updateTrainer = async (req, res) => {
-  const { id } = req.params; // ID del entrenador a actualizar
+  const { id } = req.params;
+
+  // Campos que pueden ser actualizados
   const { nombre, apellido, email, telefono, especialidad, fecha_contratacion, estado } = req.body;
   
-  // Validar que los campos obligatorios estén presentes
+  // Validacion de campos obligatorios 
   if (!nombre || !apellido || !email) {
     return res.status(400).json({ message: 'Actualización de datos del entrenador inválida' });
   }
 
   try {
-    // Ejecuta la consulta para actualizar el entrenador
+    // Actualizar el entrenador con parametros
     const result = await pool.query(
       `UPDATE entrenadores SET 
         nombre=$1, apellido=$2, email=$3, telefono=$4, especialidad=$5, fecha_contratacion=$6, estado=$7 
@@ -94,15 +92,13 @@ const updateTrainer = async (req, res) => {
       [nombre, apellido, email, telefono, especialidad, fecha_contratacion, estado, id]
     );
 
-    // Si no se encuentra el entrenador, retorna 404
+    // Entrenador no encontrado
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Entrenador no encontrado' });
     }
 
-    // Retorna el entrenador actualizado
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Error actualizando entrenador' });
   }
 };
@@ -115,24 +111,23 @@ const deleteTrainer = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Ejecuta la consulta para eliminar el entrenador
+    // Eliminar el entrenador ID 
     const result = await pool.query(
       'DELETE FROM entrenadores WHERE id_entrenador=$1 RETURNING *',
       [id]
     );
 
-    // Si no se encuentra el entrenador, retorna 404
+    // Entrenador no encontrado
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Entrenador no encontrado' });
     }
 
-    // Retorna un mensaje de éxito y los datos del entrenador eliminado
+    // Entrenador eliminado con datos 
     res.json({
       message: 'Entrenador eliminado correctamente',
       entrenador: result.rows[0]
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Error eliminando entrenador' });
   }
 };

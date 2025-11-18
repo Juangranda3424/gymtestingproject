@@ -3,6 +3,8 @@ const clientRoutes = require('./routes/clients.routes');
 const trainerRoutes = require('./routes/trainers.routes');
 const classesRoutes = require('./routes/classes.routes');
 const membershipRoutes = require('./routes/membership.routes');
+const inscriptionsRoutes = require('./routes/inscriptions.routes');
+const paymentsRoutes = require('./routes/payments.routes');
 
 const app = express();
 
@@ -17,6 +19,10 @@ app.use('/api/trainers', trainerRoutes);
 app.use('/api/classes', classesRoutes);
 // Ruta base para las membresías
 app.use('/api/memberships', membershipRoutes);
+// Ruta base para las inscripciones
+app.use('/api/inscriptions', inscriptionsRoutes);
+// Ruta base para los pagos
+app.use('/api/payments', paymentsRoutes);
 
 // Manejador de rutas no encontradas (404)
 app.use((req, res) => {

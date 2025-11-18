@@ -71,7 +71,7 @@ async function updateClient(req, res) {
 
     res.status(200).json(result.rows[0]);
   } catch {
-    res.status(500).json({ message: 'Error al actualizar' });
+      res.status(500).json({ message: 'Error al actualizar' });
   }
 }
 

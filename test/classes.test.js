@@ -12,20 +12,22 @@ beforeAll(async () => {
   // Email unico para evitar conflictos
   const uniqueEmail = `trainer_${Date.now()}@test.com`;
 
-  // Crear un entrenador para usar en las clases
+  // Nuevo entrenador para usar en las clases
   const t = await pool.query(
     `INSERT INTO entrenadores (nombre, apellido, email, telefono, especialidad, fecha_contratacion)
      VALUES ($1,$2,$3,$4,$5,$6) RETURNING id_entrenador`,
     ['Carlos', 'Perez', uniqueEmail, '0999001122', 'Yoga', '2024-01-01']
   );
+  // ID entrenador creado
   createdTrainerId = t.rows[0].id_entrenador;
 
-  // Clase base para pruebas GET y PUT
+  // Clase base para pruebas GET
   const c1 = await pool.query(
     `INSERT INTO clases (nombre_clase, descripcion, horario, dia_semana, id_entrenador)
      VALUES ($1,$2,$3,$4,$5) RETURNING id_clase`,
     ['Yoga Base', 'Clase base', '08:00', 'Lunes', createdTrainerId]
   );
+  // ID clase para GET
   baseClassId = c1.rows[0].id_clase;
 
   // Clase para pruebas PUT
@@ -34,6 +36,7 @@ beforeAll(async () => {
      VALUES ($1,$2,$3,$4,$5) RETURNING id_clase`,
     ['Clase PUT', 'Para PUT tests', '09:00', 'Martes', createdTrainerId]
   );
+  // ID clase par  PUT
   putClassId = c2.rows[0].id_clase;
 });
 
@@ -219,6 +222,7 @@ describe('PUT /api/classes/:id endpoints', () => {
 // DELETE Tests
 // -------------------
 describe('DELETE /api/classes/:id endpoints', () => {
+
   // Verifica que se pueda eliminar correctamente una clase existente
   test('DELETE /api/classes/:id should delete class', async () => {
     const res = await request(app).delete(`/api/classes/${postClassId}`);
@@ -243,6 +247,7 @@ describe('DELETE /api/classes/:id endpoints', () => {
 // Unknown route
 // -------------------
 describe('Unknown route', () => {
+
   // Verifica que cualquier ruta desconocida retorne 404
   test('GET unknown route should return 404', async () => {
     const res = await request(app).get('/api/classes/unknown/route');
@@ -251,20 +256,11 @@ describe('Unknown route', () => {
 });
 
 // -------------------
-// Simulated 500 errors
+// 500 errors
 // -------------------
 describe('Simulated 500 errors', () => {
-  let consoleSpy;
 
-  beforeAll(() => {
-    // Evita que los errores de consola se impriman durante las pruebas
-    consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterAll(() => {
-    consoleSpy.mockRestore();
-  });
-
+  // Verifica que GET /api/classes retorna 500 cuando la BD falla
   test('GET /api/classes should return 500 on DB failure', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).get('/api/classes');
@@ -273,6 +269,7 @@ describe('Simulated 500 errors', () => {
     spy.mockRestore();
   });
 
+  // Verifica que GET /api/classes/:id retorna 500 cuando la BD falla
   test('GET /api/classes/1 should return 500 on DB failure', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).get('/api/classes/1');
@@ -281,6 +278,7 @@ describe('Simulated 500 errors', () => {
     spy.mockRestore();
   });
 
+  // Verifica que POST /api/classes retorna 500 cuando la BD falla
   test('POST /api/classes should return 500 on DB failure', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).post('/api/classes').send({ nombre_clase: 'Test', horario: '10:00', dia_semana: 'Lunes' });
@@ -289,6 +287,7 @@ describe('Simulated 500 errors', () => {
     spy.mockRestore();
   });
 
+  // Verifica que PUT /api/classes/:id retorna 500 cuando la BD falla
   test('PUT /api/classes/1 should return 500 on DB failure', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).put('/api/classes/1').send({ nombre_clase: 'Test' });
@@ -297,6 +296,7 @@ describe('Simulated 500 errors', () => {
     spy.mockRestore();
   });
 
+  // Verifica que DELETE /api/classes/:id retorna 500 cuando la BD falla
   test('DELETE /api/classes/1 should return 500 on DB failure', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).delete('/api/classes/1');

@@ -2,16 +2,16 @@ const request = require('supertest');
 const app = require('../src/app');
 const pool = require('../src/db/conn'); 
 
+// Variable ID entrenador
 let createdTrainerId;
 
-// ======================================================
-// Bloque principal: tests normales de la API
-// ======================================================
 describe('Trainers API - Normal scenarios', () => {
 
   // ---------------------------
-  // GET /api/trainers - todos los entrenadores
+  // GET /api/trainers
   // ---------------------------
+
+  // Verifica que GET /api/trainers devuelve todos los entrenadores
   test('GET /api/trainers should return all trainers', async () => {
     // Probamos que se devuelvan todos los entrenadores
     const res = await request(app).get('/api/trainers');
@@ -20,8 +20,10 @@ describe('Trainers API - Normal scenarios', () => {
   });
 
   // ---------------------------
-  // POST /api/trainers - crear entrenador
+  // POST /api/trainers 
   // ---------------------------
+
+  // Verifica que POST /api/trainers crea un entrenador
   test('POST /api/trainers should create a trainer', async () => {
     const uniqueEmail = `ana_${Date.now()}@test.com`; // email único cada vez que corre el test
 
@@ -35,7 +37,7 @@ describe('Trainers API - Normal scenarios', () => {
     };
 
     const res = await request(app).post('/api/trainers').send(newTrainer);
-    expect(res.statusCode).toBe(201); // Código 201 para creación exitosa
+    expect(res.statusCode).toBe(201); 
     expect(res.body).toHaveProperty('id_entrenador');
     expect(res.body.nombre).toBe('Ana');
 
@@ -43,6 +45,7 @@ describe('Trainers API - Normal scenarios', () => {
     createdTrainerId = res.body.id_entrenador;
   });
 
+  // Verifica que POST /api/trainers retorna 400 si faltan campos requeridos
   test('POST /api/trainers should return 400 if required fields are missing', async () => {
     const invalidTrainer = { apellido: 'Perez' }; // falta nombre y email
     const res = await request(app).post('/api/trainers').send(invalidTrainer);
@@ -51,14 +54,17 @@ describe('Trainers API - Normal scenarios', () => {
   });
 
   // ---------------------------
-  // GET /api/trainers/:id - entrenador específico
+  // GET /api/trainers/:id 
   // ---------------------------
+
+  // Verifica que GET /api/trainers/:id devuelve un entrenador especifico
   test('GET /api/trainers/:id should return a specific trainer', async () => {
     const res = await request(app).get(`/api/trainers/${createdTrainerId}`);
     expect(res.statusCode).toBe(200);
     expect(res.body).toHaveProperty('id_entrenador', createdTrainerId);
   });
 
+  // Verifica que GET /api/trainers/:id retorna 404 si el entrenador no existe
   test('GET /api/trainers/:id should return 404 if not found', async () => {
     const res = await request(app).get('/api/trainers/999999');
     expect(res.statusCode).toBe(404); // Entrenador no existe
@@ -66,8 +72,10 @@ describe('Trainers API - Normal scenarios', () => {
   });
 
   // ---------------------------
-  // PUT /api/trainers/:id - actualizar entrenador
+  // PUT /api/trainers/:id 
   // ---------------------------
+
+  // Verifica que PUT /api/trainers/:id actualiza un entrenador
   test('PUT /api/trainers/:id should update a trainer', async () => {
     const uniqueEmail = `ana_${Date.now()}@test.com`;
 
@@ -87,6 +95,7 @@ describe('Trainers API - Normal scenarios', () => {
     expect(res.body.especialidad).toBe('Yoga');
   });
 
+  // Verifica que PUT /api/trainers/:id retorna 404 si el entrenador no existe
   test('PUT /api/trainers/:id should return 404 if not found', async () => {
     const updatedTrainer = { nombre: 'No Existe', apellido: 'Test', email: 'no@test.com', telefono: '000', especialidad: 'Test', fecha_contratacion: '2024-01-01', estado: true };
     const res = await request(app).put('/api/trainers/999999').send(updatedTrainer);
@@ -94,6 +103,7 @@ describe('Trainers API - Normal scenarios', () => {
     expect(res.body).toHaveProperty('message', 'Entrenador no encontrado');
   });
 
+  // Verifica que PUT /api/trainers/:id retorna 400 si faltan datos validos para actualizar
   test('PUT /api/trainers/:id should return 400 if invalid data', async () => {
     const invalidUpdate = { telefono: '0999999999' }; // falta nombre y email
     const res = await request(app).put(`/api/trainers/${createdTrainerId}`).send(invalidUpdate);
@@ -102,8 +112,10 @@ describe('Trainers API - Normal scenarios', () => {
   });
 
   // ---------------------------
-  // DELETE /api/trainers/:id - eliminar entrenador
+  // DELETE /api/trainers/:id 
   // ---------------------------
+
+  // Verifica que DELETE /api/trainers/:id elimina un entrenador
   test('DELETE /api/trainers/:id should delete a trainer', async () => {
     const res = await request(app).delete(`/api/trainers/${createdTrainerId}`);
     expect(res.statusCode).toBe(200);
@@ -111,36 +123,31 @@ describe('Trainers API - Normal scenarios', () => {
     expect(res.body.entrenador.id_entrenador).toBe(createdTrainerId);
   });
 
+  // Verifica que DELETE /api/trainers/:id retorna 404 si el entrenador no existe
   test('DELETE /api/trainers/:id should return 404 if not found', async () => {
     const res = await request(app).delete('/api/trainers/999999');
     expect(res.statusCode).toBe(404);
     expect(res.body).toHaveProperty('message', 'Entrenador no encontrado');
   });
 
-  // ---------------------------
-  // Ruta inexistente
-  // ---------------------------
+  // Verifiva una ruta inexistente
   test('GET /api/gym/clients should return 404 for an unknown route', async () => {
     const res = await request(app).get('/api/gym/clients');
-    expect(res.status).toBe(404); // Ruta no existente
+    expect(res.status).toBe(404); 
   });
 
+  // Cierre de la conexión a la DB al final
+  afterAll(async () => {
+    await pool.end();
+  });
 });
 
-// ======================================================
-// Bloque separado: tests de errores 500
-// ======================================================
+// =====================
+// Errors 500
+// =====================
 describe('Trainers API - Server errors (500)', () => {
-  let consoleSpy;
 
-  beforeAll(() => {
-    consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterAll(() => {
-    consoleSpy.mockRestore();
-  });
-
+  // Verifica que GET /api/trainers retorna 500 cuando la BD falla
   test('GET /api/trainers should return 500 if DB fails', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).get('/api/trainers');
@@ -149,6 +156,7 @@ describe('Trainers API - Server errors (500)', () => {
     spy.mockRestore();
   });
 
+  // Verifica que GET /api/trainers/:id retorna 500 cuando la BD falla
   test('GET /api/trainers/:id should return 500 if DB fails', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).get('/api/trainers/1');
@@ -157,6 +165,7 @@ describe('Trainers API - Server errors (500)', () => {
     spy.mockRestore();
   });
 
+  // Verifica que POST /api/trainers retorna 500 cuando la BD falla
   test('POST /api/trainers should return 500 if DB fails', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).post('/api/trainers').send({ nombre: 'Error', apellido: 'Test', email: 'error@test.com', telefono: '000', especialidad: 'Test', fecha_contratacion: '2024-01-01' });
@@ -165,6 +174,7 @@ describe('Trainers API - Server errors (500)', () => {
     spy.mockRestore();
   });
 
+  // Verifica que PUT /api/trainers/:id retorna 500 cuando la BD falla
   test('PUT /api/trainers/:id should return 500 if DB fails', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).put('/api/trainers/1').send({ nombre: 'Error', apellido: 'Test', email: 'error@test.com', telefono: '000', especialidad: 'Test', fecha_contratacion: '2024-01-01', estado: true });
@@ -173,16 +183,12 @@ describe('Trainers API - Server errors (500)', () => {
     spy.mockRestore();
   });
 
+  // Verifica que DELETE /api/trainers/:id retorna 500 cuando la BD falla
   test('DELETE /api/trainers/:id should return 500 if DB fails', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).delete('/api/trainers/1');
     expect(res.statusCode).toBe(500);
     expect(res.body).toHaveProperty('error', 'Error eliminando entrenador');
     spy.mockRestore();
-  });
-
-  // Cierre de la conexión a la DB al final
-  afterAll(async () => {
-    await pool.end();
   });
 });
