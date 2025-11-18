@@ -2,13 +2,13 @@ const js = require('@eslint/js');
 
 module.exports = [
     {
-        files: ['src/**/*.js'],
+        files: ['src/**/*.js'],     // Aplica a todos los archivos JS en src/
         languageOptions: {
             ecmaVersion: 2021,
-            sourceType: 'commonjs',
+            sourceType: 'commonjs', // usa require y module.exports
             globals: {
                 process: 'readonly',   // permite usar process
-                console: 'readonly'    // permite usar console
+                console: 'readonly'    // permite usar console 
             }
         },
         rules: {

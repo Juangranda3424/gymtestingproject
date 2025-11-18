@@ -4,9 +4,9 @@ const { getAllClients, createClient, updateClient, deleteClient } = require('../
 const router = express.Router();
 
 //CLIENTES
-router.get('/', getAllClients);
-router.post('/', createClient);
-router.put('/:id', updateClient);
-router.delete('/:id', deleteClient);
+router.get('/', getAllClients);     // Obtener todos los clientes
+router.post('/', createClient);     // Crear un nuevo cliente
+router.put('/:id', updateClient);   //  Actualizar un cliente existente
+router.delete('/:id', deleteClient);    // Eliminar un cliente
 
 module.exports = router;

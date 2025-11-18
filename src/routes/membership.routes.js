@@ -9,9 +9,9 @@ const {
 const router = express.Router();
 
 // MEMBRESÍAS
-router.get('/', getAllMemberships);
-router.post('/', createMembership);
-router.put('/:id', updateMembership);
-router.delete('/:id', deleteMembership);
+router.get('/', getAllMemberships);   // Obtener todas las membresías
+router.post('/', createMembership);   // Crear una nueva membresía
+router.put('/:id', updateMembership);   //  Actualizar una membresía existente
+router.delete('/:id', deleteMembership);    //  Eliminar una membresía
 
 module.exports = router;
