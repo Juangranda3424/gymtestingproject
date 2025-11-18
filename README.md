@@ -7,6 +7,8 @@ Sirve como ejemplo de servidor REST básico con todas sus operaciones de CRUD, d
 del código de un proyecto básico que maneje una API REST para gestión de clientes de un GYM. Verficando  el comportamiento correcto de los endpoints de la API, lo que 
 contribuye a mantener un código limpio, legible y menos propenso a errores. 
 
+
+
 ## Tecnologías
 
 - Express 
