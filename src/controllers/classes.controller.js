@@ -29,7 +29,7 @@ const getAllClasses = async (req, res) => {
       ORDER BY c.id_clase
     `);
     return res.json(result.rows);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error obteniendo clases' });
   }
 };
@@ -61,7 +61,7 @@ const getClassById = async (req, res) => {
     }
 
     return res.json(result.rows[0]);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error obteniendo clase' });
   }
 };
@@ -109,7 +109,7 @@ const createClass = async (req, res) => {
     );
 
     return res.status(201).json(result.rows[0]);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error creando clase' });
   }
 };
@@ -187,7 +187,7 @@ const updateClass = async (req, res) => {
     }
 
     return res.json(result.rows[0]);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error actualizando clase' });
   }
 };
@@ -214,7 +214,7 @@ const deleteClass = async (req, res) => {
     }
 
     return res.json({ message: 'Clase eliminada correctamente', clase: result.rows[0] });
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error eliminando clase' });
   }
 };

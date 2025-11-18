@@ -17,7 +17,7 @@ const getAllPayments = async (req, res) => {
       ORDER BY p.id_pago
     `);
     return res.json(result.rows);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error obteniendo pagos' });
   }
 };
@@ -48,7 +48,7 @@ const getPaymentById = async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ message: 'Pago no encontrado' });
 
     return res.json(result.rows[0]);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error obteniendo pago' });
   }
 };
@@ -83,7 +83,7 @@ const createPayment = async (req, res) => {
     `, [id_cliente, id_membresia, monto]);
 
     return res.status(201).json(result.rows[0]);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error creando pago' });
   }
 };
@@ -154,7 +154,7 @@ const updatePayment = async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ message: 'Pago no encontrado' });
 
     return res.json(result.rows[0]);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error actualizando pago' });
   }
 };
@@ -177,7 +177,7 @@ const deletePayment = async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ message: 'Pago no encontrado' });
 
     return res.json({ message: 'Pago eliminado', payment: result.rows[0] });
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error eliminando pago' });
   }
 };

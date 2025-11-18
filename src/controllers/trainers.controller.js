@@ -9,7 +9,7 @@ const getAllTrainers = async (req, res) => {
     // Todos los entrenadores
     const result = await pool.query('SELECT * FROM entrenadores');
     res.json(result.rows);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Error obteniendo entrenadores' });
   }
 };
@@ -34,7 +34,7 @@ const getTrainerById = async (req, res) => {
 
     // Entrenador encontrado
     res.json(result.rows[0]);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Error obteniendo entrenador' });
   }
 };
@@ -63,7 +63,7 @@ const createTrainer = async (req, res) => {
 
     // Entrenador creado (201)
     res.status(201).json(result.rows[0]);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Error creando entrenador' });
   }
 };
@@ -98,7 +98,7 @@ const updateTrainer = async (req, res) => {
     }
 
     res.json(result.rows[0]);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Error actualizando entrenador' });
   }
 };
@@ -127,7 +127,7 @@ const deleteTrainer = async (req, res) => {
       message: 'Entrenador eliminado correctamente',
       entrenador: result.rows[0]
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Error eliminando entrenador' });
   }
 };

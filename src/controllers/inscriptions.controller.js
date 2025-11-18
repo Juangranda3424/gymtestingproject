@@ -17,7 +17,7 @@ const getAllInscriptions = async (req, res) => {
       ORDER BY i.id_inscripcion
     `);
     return res.json(result.rows);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error obteniendo inscripciones' });
   }
 };
@@ -53,7 +53,7 @@ const getInscriptionById = async (req, res) => {
 
     // Devuelve la inscripcion encontrada
     return res.json(result.rows[0]);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error obteniendo inscripción' });
   }
 };
@@ -86,7 +86,7 @@ const createInscription = async (req, res) => {
     `, [id_cliente, id_clase]);
 
     return res.status(201).json(result.rows[0]);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error creando inscripción' });
   }
 };
@@ -120,7 +120,7 @@ const updateInscription = async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ message: 'Inscripción no encontrada' });
 
     return res.json(result.rows[0]);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error actualizando inscripción' });
   }
 };
@@ -144,7 +144,7 @@ const deleteInscription = async (req, res) => {
 
     // Confirmacion de eliminacion
     return res.json({ message: 'Inscripción eliminada', inscription: result.rows[0] });
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'Error eliminando inscripción' });
   }
 };
