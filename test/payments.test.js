@@ -85,7 +85,7 @@ describe('GYM - API - PAYMENTS', () => {
   });
 
   // -------------------------------
-  // GET ONE
+  // GET ONE - recuperar elemento especifico
   // -------------------------------
 
   // Verifica que GET /api/payments/:id devuelve un pago existente
@@ -110,7 +110,7 @@ describe('GYM - API - PAYMENTS', () => {
   });
 
   // -------------------------------
-  // PUT
+  // PUT -Metodo para actualizar
   // -------------------------------
 
   // Verifica que PUT /api/payments/:id actualiza un pago correctamente

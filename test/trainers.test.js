@@ -8,7 +8,7 @@ let createdTrainerId;
 describe('Trainers API - Normal scenarios', () => {
 
   // ---------------------------
-  // GET /api/trainers
+  // GET /api/trainers - Metodo para solicitar y recuperar datos
   // ---------------------------
 
   // Verifica que GET /api/trainers devuelve todos los entrenadores
@@ -20,7 +20,7 @@ describe('Trainers API - Normal scenarios', () => {
   });
 
   // ---------------------------
-  // POST /api/trainers 
+  // POST /api/trainers metodo para enviar datos al servidor
   // ---------------------------
 
   // Verifica que POST /api/trainers crea un entrenador
@@ -143,7 +143,7 @@ describe('Trainers API - Normal scenarios', () => {
 });
 
 // =====================
-// Errors 500
+// Errors 500 - Condiciones inesperadas en el Servidor 
 // =====================
 describe('Trainers API - Server errors (500)', () => {
 
