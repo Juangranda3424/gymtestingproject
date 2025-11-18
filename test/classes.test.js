@@ -1,244 +1,263 @@
-// test/classes.test.js
 const request = require('supertest');
 const app = require('../src/app');
 const pool = require('../src/db/conn');
 
+// Variables para almacenar IDs para pruebas
 let createdTrainerId;
-let createdClassId;
-let classIdForPut;
+let baseClassId;
+let putClassId;
+let postClassId;
 
-/*
-  Comentarios en español; descripciones/tests en inglés.
-  - beforeAll: crea trainer y una clase inicial.
-  - afterAll: limpia datos creados y cierra pool.
-*/
+beforeAll(async () => {
+  // Email unico para evitar conflictos
+  const uniqueEmail = `trainer_${Date.now()}@test.com`;
 
-describe('Classes API - Normal scenarios', () => {
-  // Crear recursos base
-  beforeAll(async () => {
-    // trainer con email único para evitar conflicto UNIQUE
-    const uniqueEmail = `trainer_${Date.now()}@test.com`;
+  // Crear un entrenador para usar en las clases
+  const t = await pool.query(
+    `INSERT INTO entrenadores (nombre, apellido, email, telefono, especialidad, fecha_contratacion)
+     VALUES ($1,$2,$3,$4,$5,$6) RETURNING id_entrenador`,
+    ['Carlos', 'Perez', uniqueEmail, '0999001122', 'Yoga', '2024-01-01']
+  );
+  createdTrainerId = t.rows[0].id_entrenador;
 
-    const t = await pool.query(
-      `INSERT INTO entrenadores (nombre, apellido, email, telefono, especialidad, fecha_contratacion)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING id_entrenador`,
-      ['Carlos', 'Perez', uniqueEmail, '0999001122', 'Yoga', '2024-01-01']
-    );
-    createdTrainerId = t.rows[0].id_entrenador;
+  // Clase base para pruebas GET y PUT
+  const c1 = await pool.query(
+    `INSERT INTO clases (nombre_clase, descripcion, horario, dia_semana, id_entrenador)
+     VALUES ($1,$2,$3,$4,$5) RETURNING id_clase`,
+    ['Yoga Base', 'Clase base', '08:00', 'Lunes', createdTrainerId]
+  );
+  baseClassId = c1.rows[0].id_clase;
 
-    // crear una clase base para GET ALL / GET by id / DELETE
-    const c = await pool.query(
-      `INSERT INTO clases (nombre_clase, descripcion, horario, dia_semana, id_entrenador)
-       VALUES ($1,$2,$3,$4,$5) RETURNING id_clase`,
-      ['Yoga Base', 'Clase base', '08:00', 'Lunes', createdTrainerId]
-    );
-    createdClassId = c.rows[0].id_clase;
+  // Clase para pruebas PUT
+  const c2 = await pool.query(
+    `INSERT INTO clases (nombre_clase, descripcion, horario, dia_semana, id_entrenador)
+     VALUES ($1,$2,$3,$4,$5) RETURNING id_clase`,
+    ['Clase PUT', 'Para PUT tests', '09:00', 'Martes', createdTrainerId]
+  );
+  putClassId = c2.rows[0].id_clase;
+});
 
-    // crear otra clase que usaremos en PUT tests (para cubrir ramas de update)
-    const c2 = await pool.query(
-      `INSERT INTO clases (nombre_clase, descripcion, horario, dia_semana, id_entrenador)
-       VALUES ($1,$2,$3,$4,$5) RETURNING id_clase`,
-      ['Clase PUT', 'Para PUT tests', '09:00', 'Martes', createdTrainerId]
-    );
-    classIdForPut = c2.rows[0].id_clase;
-  });
-
-  // ---------------------------
-  // GET ALL
-  // ---------------------------
+// -------------------
+// GET Tests
+// -------------------
+describe('GET /api/classes endpoints', () => {
+  // Verifica que la ruta GET /api/classes devuelva todas las clases
   test('GET /api/classes should return all classes', async () => {
     const res = await request(app).get('/api/classes');
     expect(res.statusCode).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
   });
 
-  // ---------------------------
-  // POST create class (happy path)
-  // ---------------------------
-  test('POST /api/classes should create a new class', async () => {
-    const newClass = {
-      nombre_clase: 'Yoga Nueva',
-      descripcion: 'Clase básica nueva',
-      horario: '09:30',
-      dia_semana: 'Miércoles',
-      id_entrenador: createdTrainerId
-    };
-
-    const res = await request(app).post('/api/classes').send(newClass);
-    expect(res.statusCode).toBe(201);
-    expect(res.body).toHaveProperty('id_clase');
-    // guardamos y luego eliminamos en afterAll
-    // si no existe la propiedad, el test falla y no rompe la suite
-    createdClassId = res.body.id_clase;
-  });
-
-  // ---------------------------
-  // POST validations (400 cases)
-  // ---------------------------
-  test('POST /api/classes should return 400 for invalid nombre_clase', async () => {
-    const invalid = { nombre_clase: 'A', horario: '10:00', dia_semana: 'Martes' };
-    const res = await request(app).post('/api/classes').send(invalid);
-    expect(res.status).toBe(400);
-    expect(res.body).toHaveProperty('message');
-  });
-
-  test('POST /api/classes should return 400 for invalid horario format', async () => {
-    const invalid = { nombre_clase: 'Spinning', horario: '99:99', dia_semana: 'Lunes' };
-    const res = await request(app).post('/api/classes').send(invalid);
-    expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/horario/i);
-  });
-
-  test('POST /api/classes should return 400 for invalid dia_semana', async () => {
-    const invalid = { nombre_clase: 'Crossfit', horario: '10:00', dia_semana: 'NoExiste' };
-    const res = await request(app).post('/api/classes').send(invalid);
-    expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/dia_semana/i);
-  });
-
-  test('POST /api/classes should return 400 if trainer does not exist', async () => {
-    const invalid = {
-      nombre_clase: 'Boxeo',
-      horario: '11:00',
-      dia_semana: 'Viernes',
-      id_entrenador: 999999
-    };
-    const res = await request(app).post('/api/classes').send(invalid);
-    expect(res.statusCode).toBe(400);
-    expect(res.body.message).toBe('Entrenador especificado no existe');
-  });
-
-  test('POST /api/classes should return 400 for invalid id_entrenador (NaN)', async () => {
-    const res = await request(app).post('/api/classes').send({
-      nombre_clase: 'Pilates',
-      horario: '09:00',
-      dia_semana: 'Lunes',
-      id_entrenador: 'abc'
-    });
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe('id_entrenador inválido');
-  });
-
-  // ---------------------------
-  // GET by ID
-  // ---------------------------
+  // Verifica que GET /api/classes/:id devuelva la clase correcta por su id
   test('GET /api/classes/:id should return class by id', async () => {
-    const res = await request(app).get(`/api/classes/${createdClassId}`);
+    const res = await request(app).get(`/api/classes/${baseClassId}`);
     expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty('id_clase', createdClassId);
+    expect(res.body).toHaveProperty('id_clase', baseClassId);
   });
 
-  test('GET /api/classes/:id should return 400 for invalid id', async () => {
+  // Verifica que GET /api/classes/:id con id inválido retorne 400
+  test('GET /api/classes/:id with invalid id should return 400', async () => {
     const res = await request(app).get('/api/classes/abc');
-    expect(res.status).toBe(400);
+    expect(res.statusCode).toBe(400);
   });
 
-  test('GET /api/classes/:id should return 404 if class not found', async () => {
+  // Verifica que GET /api/classes/:id con id inexistente retorne 404
+  test('GET /api/classes/:id with non-existing class should return 404', async () => {
     const res = await request(app).get('/api/classes/999999');
-    expect(res.status).toBe(404);
-  });
-
-  // ---------------------------
-  // PUT update class
-  // ---------------------------
-  test('PUT /api/classes/:id should update class', async () => {
-    const updatedData = { nombre_clase: 'Yoga Advanced', horario: '10:00', dia_semana: 'Martes' };
-    const res = await request(app).put(`/api/classes/${classIdForPut}`).send(updatedData);
-    expect(res.status).toBe(200);
-    expect(res.body.nombre_clase).toBe('Yoga Advanced');
-  });
-
-  test('PUT /api/classes/:id should return 400 for invalid id', async () => {
-    const res = await request(app).put('/api/classes/abc').send({});
-    expect(res.status).toBe(400);
-  });
-
-  test('PUT /api/classes/:id should return 400 if invalid nombre_clase', async () => {
-    const res = await request(app).put(`/api/classes/${classIdForPut}`).send({ nombre_clase: 'X' });
-    expect(res.status).toBe(400);
-  });
-
-  test('PUT /api/classes/:id should return 400 if no fields to update', async () => {
-    const res = await request(app).put(`/api/classes/${classIdForPut}`).send({});
-    expect(res.status).toBe(400);
-  });
-
-  test('PUT /api/classes/:id should return 404 if class not found', async () => {
-    const res = await request(app).put('/api/classes/999999').send({ nombre_clase: 'Test' });
-    expect(res.status).toBe(404);
-  });
-
-  // Validaciones PUT específicas (horario/dia/id_entrenador)
-  test('PUT /api/classes/:id should return 400 for invalid horario', async () => {
-    const res = await request(app).put(`/api/classes/${classIdForPut}`).send({ horario: '99:99' });
-    expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/horario/i);
-  });
-
-  test('PUT /api/classes/:id should return 400 for invalid dia_semana', async () => {
-    const res = await request(app).put(`/api/classes/${classIdForPut}`).send({ dia_semana: 'Doomsday' });
-    expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/dia_semana/i);
-  });
-
-  test('PUT /api/classes/:id should return 400 for invalid id_entrenador (NaN)', async () => {
-    const res = await request(app).put(`/api/classes/${classIdForPut}`).send({ id_entrenador: 'abc' });
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe('id_entrenador inválido');
-  });
-
-  test('PUT /api/classes/:id should return 400 if id_entrenador does not exist', async () => {
-    const res = await request(app).put(`/api/classes/${classIdForPut}`).send({
-      id_entrenador: 9999,
-      nombre_clase: 'Test' // forzar update query
-    });
-    expect(res.status).toBe(400);
-    expect(res.body.message).toBe('Entrenador especificado no existe');
-  });
-
-  test('PUT /api/classes/:id should set id_entrenador to null when id_entrenador is null', async () => {
-    const res = await request(app).put(`/api/classes/${classIdForPut}`).send({
-      id_entrenador: null,
-      nombre_clase: 'Clase sin entrenador'
-    });
-    expect(res.status).toBe(200);
-    expect(res.body.id_entrenador).toBeNull();
-  });
-
-  // ---------------------------
-  // DELETE class
-  // ---------------------------
-  test('DELETE /api/classes/:id should delete class', async () => {
-    const res = await request(app).delete(`/api/classes/${createdClassId}`);
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty('message');
-  });
-
-  test('DELETE /api/classes/:id should return 404 if not found', async () => {
-    const res = await request(app).delete('/api/classes/999999');
-    expect(res.status).toBe(404);
-  });
-
-  test('DELETE /api/classes/:id should return 400 for invalid id', async () => {
-    const res = await request(app).delete('/api/classes/abc');
-    expect(res.status).toBe(400);
-  });
-
-  test('GET unknown route should return 404', async () => {
-    const res = await request(app).get('/api/classes/unknown/route');
-    expect(res.status).toBe(404);
+    expect(res.statusCode).toBe(404);
   });
 });
 
+// -------------------
+// POST Tests
+// -------------------
+describe('POST /api/classes endpoints', () => {
+  // Verifica que POST /api/classes cree una nueva clase correctamente
+  test('POST /api/classes should create a new class', async () => {
+    const newClass = {
+      nombre_clase: 'Yoga Nueva',
+      descripcion: 'Clase basica nueva',
+      horario: '09:30',
+      dia_semana: 'Miercoles',
+      id_entrenador: createdTrainerId
+    };
+    const res = await request(app).post('/api/classes').send(newClass);
+    expect(res.statusCode).toBe(201);
+    expect(res.body).toHaveProperty('id_clase');
+    postClassId = res.body.id_clase;
+  });
 
-// ======================================================
-// Bloque 500 - Errores forzados del servidor
-// ======================================================
-describe('Classes API - Server errors (500)', () => {
+  // Verifica que POST /api/classes falle si el nombre de la clase es inválido
+  test('POST /api/classes with invalid nombre_clase should return 400', async () => {
+    const res = await request(app).post('/api/classes').send({ nombre_clase: 'A', horario: '10:00', dia_semana: 'Martes' });
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('message');
+  });
+
+  // Verifica que POST /api/classes falle si el horario tiene formato inválido
+  test('POST /api/classes with invalid horario should return 400', async () => {
+    const res = await request(app).post('/api/classes').send({ nombre_clase: 'Spinning', horario: '99:99', dia_semana: 'Lunes' });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/horario/i);
+  });
+
+  // Verifica que POST /api/classes falle si el día de la semana es inválido
+  test('POST /api/classes with invalid dia_semana should return 400', async () => {
+    const res = await request(app).post('/api/classes').send({ nombre_clase: 'Crossfit', horario: '10:00', dia_semana: 'NoExiste' });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/dia_semana/i);
+  });
+
+  // Verifica que POST /api/classes falle si el entrenador no existe
+  test('POST /api/classes with non-existing trainer should return 400', async () => {
+    const res = await request(app).post('/api/classes').send({ nombre_clase: 'Boxeo', horario: '11:00', dia_semana: 'Viernes', id_entrenador: 999999 });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/Entrenador especificado no existe/);
+  });
+
+  // Verifica que POST /api/classes falle si id_entrenador no es un número válido
+  test('POST /api/classes with invalid id_entrenador should return 400', async () => {
+    const res = await request(app).post('/api/classes').send({ nombre_clase: 'Pilates', horario: '09:00', dia_semana: 'Lunes', id_entrenador: 'abc' });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/id_entrenador invalido/);
+  });
+});
+
+// -------------------
+// PUT Tests
+// -------------------
+describe('PUT /api/classes/:id endpoints', () => {
+  // Verifica que se pueda actualizar correctamente una clase existente
+  test('PUT /api/classes/:id successful update', async () => {
+    const res = await request(app).put(`/api/classes/${putClassId}`).send({ nombre_clase: 'Yoga Advanced', horario: '10:00', dia_semana: 'Martes' });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.nombre_clase).toBe('Yoga Advanced');
+  });
+
+  // Verifica que retorne 400 si se proporciona un id inválido
+  test('PUT /api/classes/:id invalid id should return 400', async () => {
+    const res = await request(app).put('/api/classes/abc').send({});
+    expect(res.statusCode).toBe(400);
+  });
+
+  // Verifica que retorne 400 si el nombre de la clase es inválido
+  test('PUT /api/classes/:id invalid nombre_clase should return 400', async () => {
+    const res = await request(app).put(`/api/classes/${putClassId}`).send({ nombre_clase: 'X' });
+    expect(res.statusCode).toBe(400);
+  });
+
+  // Verifica que retorne 400 si no se proporcionan campos para actualizar
+  test('PUT /api/classes/:id no fields to update should return 400', async () => {
+    const res = await request(app).put(`/api/classes/${putClassId}`).send({});
+    expect(res.statusCode).toBe(400);
+  });
+
+  // Verifica que retorne 404 si la clase no existe
+  test('PUT /api/classes/:id class not found should return 404', async () => {
+    const res = await request(app).put('/api/classes/999999').send({ nombre_clase: 'Test' });
+    expect(res.statusCode).toBe(404);
+  });
+
+  // Verifica que retorne 400 si el horario es inválido
+  test('PUT /api/classes/:id invalid horario should return 400', async () => {
+    const res = await request(app).put(`/api/classes/${putClassId}`).send({ horario: '99:99' });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/horario/i);
+  });
+
+  // Verifica que retorne 400 si el día de la semana es inválido
+  test('PUT /api/classes/:id invalid dia_semana should return 400', async () => {
+    const res = await request(app).put(`/api/classes/${putClassId}`).send({ dia_semana: 'Doomsday' });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/dia_semana/i);
+  });
+
+  test('PUT /api/classes/:id invalid id_entrenador (NaN) should return 400', async () => {
+    const res = await request(app).put(`/api/classes/${putClassId}`).send({ id_entrenador: 'abc' });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/id_entrenador inválido/i); // ajustado acento
+  });
+
+  // Verifica que retorne 400 si el id_entrenador no existe
+  test('PUT /api/classes/:id id_entrenador does not exist should return 400', async () => {
+    const res = await request(app).put(`/api/classes/${putClassId}`).send({ id_entrenador: 9999, nombre_clase: 'Test' });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/Entrenador especificado no existe/);
+  });
+
+  // Verifica que se pueda actualizar la clase dejando id_entrenador en null
+  test('PUT /api/classes/:id set id_entrenador null', async () => {
+    const res = await request(app).put(`/api/classes/${putClassId}`).send({ id_entrenador: null, nombre_clase: 'Clase sin entrenador' });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.id_entrenador).toBeNull();
+  });
+
+  // Verifica que se pueda actualizar solo la descripción de la clase
+  test('PUT /api/classes/:id partial update descripcion', async () => {
+    const res = await request(app).put(`/api/classes/${putClassId}`).send({ descripcion: 'Clase avanzada de yoga' });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.descripcion).toBe('Clase avanzada de yoga');
+  });
+
+  // Verifica que se pueda actualizar el id_entrenador y nombre de la clase correctamente
+  test('PUT /api/classes/:id update id_entrenador valid', async () => {
+    const res = await request(app).put(`/api/classes/${putClassId}`).send({ id_entrenador: createdTrainerId, nombre_clase: 'Clase con entrenador' });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.id_entrenador).toBe(createdTrainerId);
+    expect(res.body.nombre_clase).toBe('Clase con entrenador');
+  });
+
+  // Verifica que se convierta correctamente un id_entrenador en string a número
+  test('PUT /api/classes/:id should convert string id_entrenador to number', async () => {
+    const res = await request(app).put(`/api/classes/${putClassId}`).send({ id_entrenador: String(createdTrainerId), nombre_clase: 'Clase con entrenador string' });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.id_entrenador).toBe(createdTrainerId);
+  });
+});
+
+// -------------------
+// DELETE Tests
+// -------------------
+describe('DELETE /api/classes/:id endpoints', () => {
+  // Verifica que se pueda eliminar correctamente una clase existente
+  test('DELETE /api/classes/:id should delete class', async () => {
+    const res = await request(app).delete(`/api/classes/${postClassId}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('message');
+  });
+
+  // Verifica que retorne 404 si la clase a eliminar no existe
+  test('DELETE /api/classes/:id class not found should return 404', async () => {
+    const res = await request(app).delete('/api/classes/999999');
+    expect(res.statusCode).toBe(404);
+  });
+
+  // Verifica que retorne 400 si el id proporcionado es inválido
+  test('DELETE /api/classes/:id invalid id should return 400', async () => {
+    const res = await request(app).delete('/api/classes/abc');
+    expect(res.statusCode).toBe(400);
+  });
+});
+
+// -------------------
+// Unknown route
+// -------------------
+describe('Unknown route', () => {
+  // Verifica que cualquier ruta desconocida retorne 404
+  test('GET unknown route should return 404', async () => {
+    const res = await request(app).get('/api/classes/unknown/route');
+    expect(res.statusCode).toBe(404);
+  });
+});
+
+// -------------------
+// Simulated 500 errors
+// -------------------
+describe('Simulated 500 errors', () => {
   let consoleSpy;
 
   beforeAll(() => {
-    // silenciar console.error para que no ensucie la salida de tests
+    // Evita que los errores de consola se impriman durante las pruebas
     consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -246,57 +265,43 @@ describe('Classes API - Server errors (500)', () => {
     consoleSpy.mockRestore();
   });
 
-  test('GET /api/classes should return 500 when DB fails', async () => {
+  test('GET /api/classes should return 500 on DB failure', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).get('/api/classes');
-    expect(res.status).toBe(500);
+    expect(res.statusCode).toBe(500);
     expect(res.body.error).toMatch(/Error obteniendo clases/);
     spy.mockRestore();
   });
 
-  test('GET /api/classes/:id should return 500 when DB fails', async () => {
+  test('GET /api/classes/1 should return 500 on DB failure', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).get('/api/classes/1');
-    expect(res.status).toBe(500);
+    expect(res.statusCode).toBe(500);
     expect(res.body.error).toMatch(/Error obteniendo clase/);
     spy.mockRestore();
   });
 
-  test('POST /api/classes should return 500 when DB fails', async () => {
+  test('POST /api/classes should return 500 on DB failure', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).post('/api/classes').send({ nombre_clase: 'Test', horario: '10:00', dia_semana: 'Lunes' });
-    expect(res.status).toBe(500);
+    expect(res.statusCode).toBe(500);
     expect(res.body.error).toMatch(/Error creando clase/);
     spy.mockRestore();
   });
 
-  test('PUT /api/classes/:id should return 500 when DB fails', async () => {
+  test('PUT /api/classes/1 should return 500 on DB failure', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).put('/api/classes/1').send({ nombre_clase: 'Test' });
-    expect(res.status).toBe(500);
+    expect(res.statusCode).toBe(500);
     expect(res.body.error).toMatch(/Error actualizando clase/);
     spy.mockRestore();
   });
 
-  test('DELETE /api/classes/:id should return 500 when DB fails', async () => {
+  test('DELETE /api/classes/1 should return 500 on DB failure', async () => {
     const spy = jest.spyOn(pool, 'query').mockImplementation(() => { throw new Error('DB error'); });
     const res = await request(app).delete('/api/classes/1');
-    expect(res.status).toBe(500);
+    expect(res.statusCode).toBe(500);
     expect(res.body.error).toMatch(/Error eliminando clase/);
     spy.mockRestore();
-  });
-
-  // limpiar y cerrar pool
-  afterAll(async () => {
-    try {
-      // eliminar las clases creadas por los tests si quedan
-      if (classIdForPut) await pool.query('DELETE FROM clases WHERE id_clase=$1', [classIdForPut]);
-      if (createdClassId) await pool.query('DELETE FROM clases WHERE id_clase=$1', [createdClassId]);
-      if (createdTrainerId) await pool.query('DELETE FROM entrenadores WHERE id_entrenador=$1', [createdTrainerId]);
-    } catch (e) {
-      // no romper en caso de fallo de limpieza
-    } finally {
-      await pool.end();
-    }
   });
 });

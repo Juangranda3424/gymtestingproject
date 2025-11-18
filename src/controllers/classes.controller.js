@@ -1,7 +1,7 @@
 const pool = require('../db/conn');
 
 /**
- * Valid helpers
+ * Validacion: string t es un tiempo válido en formato HH:MM
  */
 const isValidTime = (t) => {
   // acepta HH:MM formato 24h
@@ -84,7 +84,7 @@ const createClass = async (req, res) => {
     let entrenadorId = null;
     if (id_entrenador !== undefined && id_entrenador !== null) {
       if (Number.isNaN(Number(id_entrenador))) {
-        return res.status(400).json({ message: 'id_entrenador inválido' });
+        return res.status(400).json({ message: 'id_entrenador invalido' });
       }
       const trainerCheck = await pool.query('SELECT id_entrenador FROM entrenadores WHERE id_entrenador=$1', [id_entrenador]);
       if (trainerCheck.rows.length === 0) {
@@ -108,7 +108,6 @@ const createClass = async (req, res) => {
 
 /**
  * PUT /api/classes/:id
- * Actualizar clase existente
  */
 const updateClass = async (req, res) => {
   const { id } = req.params;
@@ -118,7 +117,7 @@ const updateClass = async (req, res) => {
     return res.status(400).json({ message: 'ID inválido' });
   }
 
-  // Validaciones parciales: si vienen campos, validarlos
+  // Validaciones parciales solo si se envían
   if (nombre_clase !== undefined && (typeof nombre_clase !== 'string' || nombre_clase.trim().length < 2)) {
     return res.status(400).json({ message: 'nombre_clase debe tener al menos 2 caracteres' });
   }
@@ -130,24 +129,21 @@ const updateClass = async (req, res) => {
   }
 
   try {
-    // Si se pasa id_entrenador validar existencia (puede ser null para desasociar)
-    let entrenadorId = null;
-    if (id_entrenador !== undefined) {
-      if (id_entrenador !== null && Number.isNaN(Number(id_entrenador))) {
+    // Validación de id_entrenador si se proporciona
+    if (id_entrenador !== undefined && id_entrenador !== null) {
+      if (Number.isNaN(Number(id_entrenador))) {
         return res.status(400).json({ message: 'id_entrenador inválido' });
       }
-      if (id_entrenador !== null) {
-        const trainerCheck = await pool.query('SELECT id_entrenador FROM entrenadores WHERE id_entrenador=$1', [id_entrenador]);
-        if (trainerCheck.rows.length === 0) {
-          return res.status(400).json({ message: 'Entrenador especificado no existe' });
-        }
-        entrenadorId = Number(id_entrenador);
-      } else {
-        entrenadorId = null; // explícitamente desasociar
+      const trainerCheck = await pool.query(
+        'SELECT id_entrenador FROM entrenadores WHERE id_entrenador=$1',
+        [id_entrenador]
+      );
+      if (trainerCheck.rows.length === 0) {
+        return res.status(400).json({ message: 'Entrenador especificado no existe' });
       }
     }
 
-    // Construir consulta dinámica para actualizar solo los campos provistos
+    // Construir consulta dinámica
     const fields = [];
     const values = [];
     let idx = 1;
@@ -156,7 +152,7 @@ const updateClass = async (req, res) => {
     if (descripcion !== undefined) { fields.push(`descripcion=$${idx++}`); values.push(descripcion); }
     if (horario !== undefined) { fields.push(`horario=$${idx++}`); values.push(horario); }
     if (dia_semana !== undefined) { fields.push(`dia_semana=$${idx++}`); values.push(dia_semana); }
-    if (id_entrenador !== undefined) { fields.push(`id_entrenador=$${idx++}`); values.push(entrenadorId); }
+    if (id_entrenador !== undefined) { fields.push(`id_entrenador=$${idx++}`); values.push(id_entrenador === null ? null : Number(id_entrenador)); }
 
     if (fields.length === 0) {
       return res.status(400).json({ message: 'No hay campos para actualizar' });
@@ -166,7 +162,6 @@ const updateClass = async (req, res) => {
     values.push(id);
 
     const query = `UPDATE clases SET ${fields.join(', ')} WHERE id_clase=$${idx} RETURNING *`;
-
     const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
@@ -182,7 +177,7 @@ const updateClass = async (req, res) => {
 
 /**
  * DELETE /api/classes/:id
- * Eliminar clase (soft delete no requerido por modelo, hacemos delete físico)
+ * Eliminar clase (Delete físico)
  */
 const deleteClass = async (req, res) => {
   const { id } = req.params;
