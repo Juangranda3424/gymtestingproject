@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const clientRoutes = require('./routes/clients.routes');
 const trainerRoutes = require('./routes/trainers.routes');
 const classesRoutes = require('./routes/classes.routes');
@@ -7,6 +8,9 @@ const inscriptionsRoutes = require('./routes/inscriptions.routes');
 const paymentsRoutes = require('./routes/payments.routes');
 
 const app = express();
+
+// Middleware para habilitar CORS
+app.use(cors()); // - Esto permite peticiones desde cualquier origen por defecto
 
 // Middleware para parsear JSON del cuerpo de las solicitudes
 app.use(express.json());
@@ -27,6 +31,12 @@ app.use('/api/payments', paymentsRoutes);
 // Manejador de rutas no encontradas (404)
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
+});
+
+// AGREGA ESTO: Iniciar el servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
 
 module.exports = app;

@@ -1,5 +1,5 @@
 
-//-- ESQUEMA DE BASE DE DATOS PARA GIMNASIO
+-- ESQUEMA DE BASE DE DATOS PARA GIMNASIO
 CREATE TABLE clientes (
     id_cliente SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE clientes (
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     estado BOOLEAN DEFAULT TRUE -- activo/inactivo
 );
-//-- Tabla de entrenadores
+-- Tabla de entrenadores
 CREATE TABLE entrenadores (
     id_entrenador SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -21,14 +21,14 @@ CREATE TABLE entrenadores (
     fecha_contratacion DATE,
     estado BOOLEAN DEFAULT TRUE -- activo/inactivo
 );
-//-- Tabla de membresías
+-- Tabla de membresías
 CREATE TABLE membresias (
     id_membresia SERIAL PRIMARY KEY,
     tipo VARCHAR(50) NOT NULL, -- mensual, trimestral, anual
     precio DECIMAL(10,2) NOT NULL,
     duracion_meses INT NOT NULL
 );
-//-- Tabla de pagos
+-- Tabla de pagos
 CREATE TABLE pagos (
     id_pago SERIAL PRIMARY KEY,
     id_cliente INT REFERENCES clientes(id_cliente) ON DELETE CASCADE,
@@ -45,7 +45,7 @@ CREATE TABLE clases (
     dia_semana VARCHAR(10) NOT NULL,
     id_entrenador INT REFERENCES entrenadores(id_entrenador) ON DELETE SET NULL
 );
-//-- Tabla de inscripciones a clases
+-- Tabla de inscripciones a clases
 CREATE TABLE inscripciones (
     id_inscripcion SERIAL PRIMARY KEY,
     id_cliente INT REFERENCES clientes(id_cliente) ON DELETE CASCADE,
