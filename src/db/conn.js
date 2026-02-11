@@ -1,13 +1,8 @@
 const { Pool } = require('pg');
-const config = require('../config');
 
 // Configuración del pool de conexiones
 const pool = new Pool({
-  user: config.db.user,
-  host: config.db.host,
-  database: config.db.database,
-  password: config.db.password,
-  port: config.db.port,
+  connectionString: process.env.DATABASE_URL,
   max: 20,
   idleTimeoutMillis: 30000,
 });

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const clientRoutes = require('./routes/clients.routes');
@@ -33,10 +34,12 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// AGREGA ESTO: Iniciar el servidor
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+// Solo iniciar servidor si no estamos en Vercel
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  });
+}
 
 module.exports = app;
