@@ -59,7 +59,7 @@ async function updateClient(req, res) {
         .status(400)
         .json({ message: 'Actualización de datos del cliente inválida' });
     }
-      // Construyo la consulta dinámicamente
+    // Construyo la consulta dinámicamente
     const result = await pool.query(
       'UPDATE clientes SET nombre=$1, apellido=$2, telefono=$3 WHERE id_cliente=$4 RETURNING *',
       [name, lastname, cell, id]
@@ -68,7 +68,7 @@ async function updateClient(req, res) {
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Cliente no encontrado' });
     }
-      // Devuelvo el cliente actualizado
+    // Devuelvo el cliente actualizado
     res.status(200).json(result.rows[0]);
   } catch {
     res.status(500).json({ message: 'Error al actualizar' });
