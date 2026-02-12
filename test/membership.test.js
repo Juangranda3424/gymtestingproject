@@ -4,6 +4,13 @@ const pool = require('../src/db/conn');
 
 describe('GYM - API - MEMBERSHIPS', () => {
 
+    // GET → ruta raíz para verificar que el servidor funciona
+    test('GET / should return API status', async () => {
+        const res = await request(app).get('/');
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty('status', 'ok');
+    });
+
     // GET → debería devolver lista de membresías
     test('GET /api/memberships should return list of memberships', async () => {
         const res = await request(app).get('/api/memberships');
@@ -27,6 +34,24 @@ describe('GYM - API - MEMBERSHIPS', () => {
             .send(newMembership);
 
         expect(res.status).toBe(201);
+    });
+
+    // POST → debería retornar 409 si la membresía ya existe (duplicado)
+    test('POST /api/memberships should return 409 if membership type already exists', async () => {
+        const tipo = `duplicate_${Date.now()}`;
+
+        // Crear la primera membresía
+        await request(app)
+            .post('/api/memberships')
+            .send({ tipo, precio: 30.00, duracion_meses: 1 });
+
+        // Intentar crear otra con el mismo tipo
+        const res = await request(app)
+            .post('/api/memberships')
+            .send({ tipo, precio: 40.00, duracion_meses: 2 });
+
+        expect(res.status).toBe(409);
+        expect(res.body).toHaveProperty('message', 'La membresía ya existe');
     });
 
     // POST → debería fallar por datos faltantes
@@ -81,6 +106,24 @@ describe('GYM - API - MEMBERSHIPS', () => {
 
         expect(res.status).toBe(404);
         expect(res.body).toHaveProperty('message', 'Membresía no encontrada');
+    });
+
+    // DELETE → debería eliminar una membresía exitosamente
+    test('DELETE /api/memberships/:id should delete a membership successfully', async () => {
+        // Primero crear una membresía para eliminar
+        const tipo = `delete_test_${Date.now()}`;
+        const createRes = await request(app)
+            .post('/api/memberships')
+            .send({ tipo, precio: 15.00, duracion_meses: 1 });
+
+        expect(createRes.status).toBe(201);
+        const membershipId = createRes.body.id_membresia;
+
+        // Ahora eliminarla
+        const res = await request(app).delete(`/api/memberships/${membershipId}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveProperty('id_membresia', membershipId);
     });
 
     // Ruta inexistente
