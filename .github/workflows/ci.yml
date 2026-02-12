@@ -29,7 +29,6 @@ jobs:
         run: npm test
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        continue-on-error: true
 
   load-test:
     runs-on: ubuntu-latest
