@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
   res.json({ message: 'Gym API is running', status: 'ok' });
 });
 
-// Ruta base para los clientes
+// Ruta base para los clientes en la base de datos
 app.use('/api/clients', clientRoutes);
 // Ruta base para los entrenadores
 app.use('/api/trainers', trainerRoutes);
