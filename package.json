@@ -9,7 +9,8 @@
   "scripts": {
     "test": "jest --coverage",
     "lint": "eslint",
-    "start": "node src/app.js"
+    "start": "node src/app.js",
+    "load-test": "k6 run load-test.js"
   },
   "author": "",
   "license": "ISC",
