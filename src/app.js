@@ -16,6 +16,11 @@ app.use(cors()); // - Esto permite peticiones desde cualquier origen por defecto
 // Middleware para parsear JSON del cuerpo de las solicitudes
 app.use(express.json());
 
+// Ruta raíz para verificar que el servidor funciona
+app.get('/', (req, res) => {
+  res.json({ message: 'Gym API is running', status: 'ok' });
+});
+
 // Ruta base para los clientes
 app.use('/api/clients', clientRoutes);
 // Ruta base para los entrenadores
